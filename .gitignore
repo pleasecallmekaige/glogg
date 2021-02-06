@@ -37,3 +37,5 @@ tests/build/
 # Qt-specific
 /.moc
 /.qmake.stash
+
+hello_world/*
