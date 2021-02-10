@@ -24,6 +24,8 @@
 
 #include <cassert>
 #include <QStringList>
+#include <QApplication>
+#include <QString>
 
 #include "log.h"
 #include "persistable.h"
@@ -48,8 +50,11 @@ void PersistentInfo::migrateAndInit()
     // .ini file is found (glogg <= 0.9 used the registry).
 
     // This store the config file in %appdata%
-    settings_ = new QSettings( QSettings::IniFormat,
-            QSettings::UserScope, "glogg", "glogg" );
+    // xumingkai: don't use %appdata%,use current dir
+    QString fileName;
+    fileName = QCoreApplication::applicationDirPath();
+    fileName+="./glog.ini";
+    settings_ = new QSettings(fileName, QSettings::IniFormat);
 
     if ( settings_->childKeys().count() == 0 ) {
         LOG(logWARNING) << "INI file empty, trying to import from registry";
