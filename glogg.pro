@@ -55,6 +55,7 @@ SOURCES += \
     src/viewtools.cpp \
     src/encodingspeculator.cpp \
     src/gloggapp.cpp \
+    src/matchchunk.cpp \
 
 INCLUDEPATH += src/
 
@@ -103,6 +104,7 @@ HEADERS += \
     src/viewtools.h \
     src/encodingspeculator.h \
     src/gloggapp.h \
+    src/matchchunk.h \
 
 isEmpty(BOOST_PATH) {
     message(Building using system dynamic Boost libraries)
@@ -141,6 +143,7 @@ macx {
 }
 else {
     # For Windows icon
+    message( "For Windows icon" )
     RC_ICONS = glogg48.ico
     QMAKE_TARGET_COMPANY = "Nicolas Bonnefon"
     QMAKE_TARGET_DESCRIPTION = "glogg - the fast, smart log explorer"
@@ -187,10 +190,12 @@ target.path = $$PREFIX/bin
 INSTALLS = target icon16 icon32 icon_svg doc desktop
 
 # Build directories
-CONFIG(debug, debug|release) {
+CONFIG(debug) {
     DESTDIR = debug
+    message("debug mode")
 } else {
     DESTDIR = release
+    message("release mode")
 }
 
 OBJECTS_DIR = $${OUT_PWD}/.obj/$${DESTDIR}-shared
@@ -214,8 +219,10 @@ GPROF {
 isEmpty(LOG_LEVEL) {
     CONFIG(debug, debug|release) {
         DEFINES += FILELOG_MAX_LEVEL=\"logDEBUG4\"
+        message("LOG_LEVEL logDEBUG4")
     } else {
         DEFINES += FILELOG_MAX_LEVEL=\"logDEBUG\"
+        message("LOG_LEVEL logDEBUG")
     }
 }
 else {

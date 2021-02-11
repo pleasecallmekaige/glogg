@@ -71,20 +71,21 @@ void QuickFindPattern::changeSearchPattern( const QString& pattern, bool ignoreC
 }
 
 bool QuickFindPattern::matchLine( const QString& line,
-        QList<QuickFindMatch>& matches ) const
+        QLinkedList<MatchChunk>& matches ) const
 {
-    matches.clear();
+    bool rlt = false;
 
     if ( active_ ) {
         QRegularExpressionMatchIterator matchIterator = regexp_.globalMatch(line);
 
         while( matchIterator.hasNext() ) {
             QRegularExpressionMatch match = matchIterator.next();
-            matches << QuickFindMatch ( match.capturedStart(), match.capturedLength() );
+            matches << MatchChunk ( match.capturedStart(), match.capturedLength(), MatchChunk::QuickFind );
+            rlt = true;
         }
     }
 
-    return ( matches.count() > 0 );
+    return rlt;
 }
 
 bool QuickFindPattern::isLineMatching( const QString& line, int column ) const

@@ -106,6 +106,21 @@ LineChunk::LineChunk( int first_col, int last_col, ChunkType type )
     type_  = type;
 }
 
+LineChunk::LineChunk( int first_col, int last_col, MatchChunk match )
+{
+    // LOG(logDEBUG) << "new LineChunk: " << first_col << " " << last_col;
+
+    start_ = first_col;
+    end_   = last_col;
+    if ( MatchChunk::Filter == match.type() ) {
+        type_ = LineChunk::Filter;
+    } else if ( MatchChunk::QuickFind == match.type() ) {
+        type_ = LineChunk::Highlighted;
+    }
+    foreColor_ = match.foreColor();
+    backColor_ = match.backColor();
+}
+
 QList<LineChunk> LineChunk::select( int sel_start, int sel_end ) const
 {
     QList<LineChunk> list;
@@ -152,6 +167,14 @@ inline void LineDrawer::addChunk( const LineChunk& chunk,
     int last_col  = chunk.end();
 
     addChunk( first_col, last_col, fore, back );
+}
+
+inline void LineDrawer::addChunk( const LineChunk& chunk)
+{
+    int first_col = chunk.start();
+    int last_col  = chunk.end();
+
+    addChunk( first_col, last_col, chunk.foreColor(), chunk.backColor() );
 }
 
 inline void LineDrawer::draw( QPainter& painter,
@@ -1535,27 +1558,28 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
             foreColor = palette.color( QPalette::HighlightedText );
             backColor = palette.color( QPalette::Highlight );
             painter.setPen(palette.color(QPalette::Text));
-        }
-        else if ( filterSet->matchLine( logData->getLineString( line_index ),
-                    &foreColor, &backColor ) ) {
-            // Apply a filter to the line
-        }
-        else {
+        } else {
             // Use the default colors
             foreColor = palette.color( QPalette::Text );
             backColor = palette.color( QPalette::Base );
         }
+
+        // Is there Filter match something?
+        QLinkedList<class MatchChunk> MatchList;
+        bool isFilterMatch =
+            filterSet->matchLine( logData->getLineString( line_index ), MatchList );
 
         // Is there something selected in the line?
         int sel_start, sel_end;
         bool isSelection =
             selection_.getPortionForLine( line_index, &sel_start, &sel_end );
         // Has the line got elements to be highlighted
-        QList<QuickFindMatch> qfMatchList;
-        bool isMatch =
-            quickFindPattern_->matchLine( line, qfMatchList );
+        bool isQuickFindMatch =
+            quickFindPattern_->matchLine( line, MatchList );
 
-        if ( isSelection || isMatch ) {
+        LOG(logINFO) << "MatchList size " << MatchList.size();
+
+        if ( isSelection || isFilterMatch || isQuickFindMatch ) {
             // We use the LineDrawer and its chunks because the
             // line has to be somehow highlighted
             LineDrawer lineDrawer( backColor );
@@ -1563,7 +1587,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
             // First we create a list of chunks with the highlights
             QList<LineChunk> chunkList;
             int column = 0; // Current column in line space
-            foreach( const QuickFindMatch match, qfMatchList ) {
+            foreach( const MatchChunk match, MatchList ) {
                 int start = match.startColumn() - firstCol;
                 int end = start + match.length();
                 // Ignore matches that are *completely* outside view area
@@ -1572,8 +1596,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
                 if ( start > column )
                     chunkList << LineChunk( column, start - 1, LineChunk::Normal );
                 column = qMin( start + match.length() - 1, nbCols );
-                chunkList << LineChunk( qMax( start, 0 ), column,
-                        LineChunk::Highlighted );
+                chunkList << LineChunk( qMax( start, 0 ), column, match );
                 column++;
             }
             if ( column <= cutLine.length() - 1 )
@@ -1592,7 +1615,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
             else
                 newChunkList = chunkList;
 
-            foreach ( const LineChunk chunk, newChunkList ) {
+            foreach ( LineChunk chunk, newChunkList ) {
                 // Select the colours
                 QColor fore;
                 QColor back;
@@ -1600,19 +1623,25 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
                     case LineChunk::Normal:
                         fore = foreColor;
                         back = backColor;
+                        chunk.setColor(foreColor, backColor);
+                        break;
+                    case LineChunk::Filter:
+                        // 不需要设置颜色，在match中已经设置了
                         break;
                     case LineChunk::Highlighted:
                         fore = QColor( "black" );
                         back = QColor( "yellow" );
                         // fore = highlightForeColor;
                         // back = highlightBackColor;
+                        chunk.setColor(fore, back);
                         break;
                     case LineChunk::Selected:
                         fore = palette.color( QPalette::HighlightedText ),
-                             back = palette.color( QPalette::Highlight );
+                        back = palette.color( QPalette::Highlight );
+                        chunk.setColor(foreColor, backColor);
                         break;
                 }
-                lineDrawer.addChunk ( chunk, fore, back );
+                lineDrawer.addChunk ( chunk );
             }
 
             lineDrawer.draw( painter, xPos, yPos,

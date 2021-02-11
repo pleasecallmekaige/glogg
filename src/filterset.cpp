@@ -98,6 +98,11 @@ bool Filter::hasMatch( const QString& string ) const
     return regexp_.match( string ).hasMatch();
 }
 
+QRegularExpressionMatchIterator Filter::globalMatch( const QString& string ) const
+{
+    return regexp_.globalMatch( string );
+}
+
 //
 // Operators for serialization
 //
@@ -132,18 +137,29 @@ FilterSet::FilterSet()
 }
 
 bool FilterSet::matchLine( const QString& line,
-        QColor* foreColor, QColor* backColor ) const
+        QLinkedList<MatchChunk>& matches ) const
 {
+    bool rlt = false;
+
+    matches.clear();
     for ( QList<Filter>::const_iterator i = filterList.constBegin();
           i != filterList.constEnd(); i++ ) {
-        if ( i->hasMatch( line ) ) {
-            foreColor->setNamedColor( i->foreColorName() );
-            backColor->setNamedColor( i->backColorName() );
-            return true;
+
+        QRegularExpressionMatchIterator matchIterator = i->globalMatch(line);
+        while( matchIterator.hasNext() ) {
+            QRegularExpressionMatch match = matchIterator.next();
+            MatchChunk newMatach = MatchChunk( match.capturedStart(), match.capturedLength(), MatchChunk::Filter );
+            QColor foreColor; 
+            QColor backColor;
+            foreColor.setNamedColor( i->foreColorName() );
+            backColor.setNamedColor( i->backColorName() );
+            newMatach.setColor(foreColor, backColor);
+            matches << newMatach;
+            rlt = true;
         }
     }
 
-    return false;
+    return rlt;
 }
 
 //

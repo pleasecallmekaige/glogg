@@ -33,6 +33,7 @@
 #include "overviewwidget.h"
 #include "quickfindmux.h"
 #include "viewtools.h"
+#include "matchchunk.h"
 
 class QMenu;
 class QAction;
@@ -43,15 +44,25 @@ class LineChunk
   public:
     enum ChunkType {
         Normal,
+        Filter,
         Highlighted,
         Selected,
     };
 
     LineChunk( int first_col, int end_col, ChunkType type );
+    LineChunk( int first_col, int last_col, MatchChunk match );
 
     int start() const { return start_; }
     int end() const { return end_; }
     ChunkType type() const { return type_; }
+    void setColor(QColor& foreColor, QColor& backColor) 
+    {
+        foreColor_ = foreColor;
+        backColor_ = backColor;
+    }
+
+    const QColor& foreColor() const { return foreColor_; }
+    const QColor& backColor() const { return backColor_; }
 
     // Returns 'true' if the selection is part of this chunk
     // (at least partially), if so, it should be replaced by the list returned
@@ -61,6 +72,8 @@ class LineChunk
     int start_;
     int end_;
     ChunkType type_;
+    QColor foreColor_;
+    QColor backColor_;
 };
 
 // Utility class for syntax colouring.
@@ -79,6 +92,7 @@ class LineDrawer
     // The column are relative to the screen
     void addChunk( int first_col, int last_col, QColor fore, QColor back );
     void addChunk( const LineChunk& chunk, QColor fore, QColor back );
+    void addChunk( const LineChunk& chunk);
 
     // Draw the current line of text using the given painter,
     // in the passed block (in pixels)

@@ -23,8 +23,10 @@
 #include <QRegularExpression>
 #include <QColor>
 #include <QMetaType>
+#include <QLinkedList>
 
 #include "persistable.h"
+#include "matchchunk.h"
 
 // Represents a filter, i.e. a regexp and the colors matching text
 // should be rendered in.
@@ -37,6 +39,7 @@ class Filter
             const QString& foreColor, const QString& backColor );
 
     bool hasMatch( const QString& string ) const;
+    QRegularExpressionMatchIterator globalMatch( const QString& string ) const;
 
     // Accessor functions
     QString pattern() const;
@@ -74,8 +77,7 @@ class FilterSet : public Persistable
     // Returns weither the passed line match a filter of the set,
     // if so, it returns the fore/back colors the line should use.
     // Ownership of the colors is transfered to the caller.
-    bool matchLine( const QString& line,
-            QColor* foreColor, QColor* backColor ) const;
+    bool matchLine( const QString& line, QLinkedList<MatchChunk>& matches ) const;
 
     // Reads/writes the current config in the QSettings object passed
     virtual void saveToStorage( QSettings& settings ) const;

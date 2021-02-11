@@ -23,24 +23,9 @@
 #include <QObject>
 #include <QString>
 #include <QRegularExpression>
-#include <QList>
+#include <QLinkedList>
 
-// Represents a match result for QuickFind
-class QuickFindMatch
-{
-  public:
-    // Construct a match (must be initialised)
-    QuickFindMatch( int start_column, int length )
-    { startColumn_ = start_column; length_ = length; }
-
-    // Accessor functions
-    int startColumn() const { return startColumn_; }
-    int length() const { return length_; }
-
-  private:
-    int startColumn_;
-    int length_;
-};
+#include "matchchunk.h"
 
 // Represents a search pattern for QuickFind (without its results)
 class QuickFindPattern : public QObject
@@ -68,7 +53,7 @@ class QuickFindPattern : public QObject
     // If so, it populate the passed list with the list of matches
     // within this particular line.
     bool matchLine( const QString& line,
-            QList<QuickFindMatch>& matches ) const;
+            QLinkedList<MatchChunk>& matches ) const;
 
     // Returns whether there is a match in the passed line, starting at
     // the passed column.
