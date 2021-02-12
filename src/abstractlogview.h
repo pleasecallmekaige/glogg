@@ -234,6 +234,8 @@ class AbstractLogView :
     // Sent when the view ask for a line to be marked
     // (click in the left margin).
     void markLine( qint64 line );
+    // Sent when the view wants the Filter pattern to change.
+    void addToFilter( const QString& pattern);
     // Sent up when the user wants to add the selection to the search
     void addToSearch( const QString& selection );
     // Sent up when the mouse is hovered over a line's margin
@@ -288,6 +290,7 @@ class AbstractLogView :
 
   private slots:
     void handlePatternUpdated();
+    void addToFilter();
     void addToSearch();
     void findNextSelected();
     void findPreviousSelected();
@@ -363,6 +366,7 @@ class AbstractLogView :
     QAction* findNextAction_;
     QAction* findPreviousAction_;
     QAction* addToSearchAction_;
+    QAction* addToFilterAction_;
 
     // Pointer to the CrawlerWidget's QFP object
     const QuickFindPattern* const quickFindPattern_;

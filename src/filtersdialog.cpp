@@ -242,6 +242,38 @@ void FiltersDialog::updateFilterProperties()
     }
 }
 
+void FiltersDialog::addFilter(const QString& pattern)
+{
+    LOG(logDEBUG) << "addFilterProperties()";
+
+    Filter newFilter = Filter( pattern, true,
+            DEFAULT_FORE_COLOUR, DEFAULT_BACK_COLOUR );
+    filterSet->filterList << newFilter;
+
+    int index = filterSet->filterList.size() - 1;
+
+    // Add and select the newly created filter
+    filterListWidget->addItem( DEFAULT_PATTERN );
+    filterListWidget->setCurrentRow( index );
+
+    // If a row is selected
+
+    Filter& currentFilter = filterSet->filterList[index];
+
+    // Update the internal data
+    currentFilter.setPattern( pattern );
+    currentFilter.setIgnoreCase( ignoreCaseCheckBox->isChecked() );
+    currentFilter.setForeColor( foreColorBox->currentText() );
+    currentFilter.setBackColor( backColorBox->currentText() );
+
+    // Update the entry in the filterList widget
+    filterListWidget->currentItem()->setText( patternEdit->text() );
+    filterListWidget->currentItem()->setForeground(
+            QBrush( QColor( currentFilter.foreColorName() ) ) );
+    filterListWidget->currentItem()->setBackground(
+            QBrush( QColor( currentFilter.backColorName() ) ) );
+}
+
 //
 // Private functions
 //

@@ -370,11 +370,13 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
             findNextAction_->setEnabled( true );
             findPreviousAction_->setEnabled( true );
             addToSearchAction_->setEnabled( true );
+            addToFilterAction_->setEnabled( true );
         }
         else {
             findNextAction_->setEnabled( false );
             findPreviousAction_->setEnabled( false );
             addToSearchAction_->setEnabled( false );
+            addToFilterAction_->setEnabled( false );
         }
 
         // "Add to search" only makes sense in regexp mode
@@ -968,6 +970,17 @@ void AbstractLogView::handlePatternUpdated()
     update();
 }
 
+// add the current to the new filter expression
+void AbstractLogView::addToFilter()
+{
+    if ( selection_.isPortion() ) {
+        emit addToFilter( selection_.getSelectedText( logData ) );
+    }
+    else {
+        LOG(logERROR) << "AbstractLogView::addToSearch called for a wrong type of selection";
+    }
+}
+
 // OR the current with the current search expression
 void AbstractLogView::addToSearch()
 {
@@ -1376,12 +1389,19 @@ void AbstractLogView::createMenu()
     connect( addToSearchAction_, SIGNAL( triggered() ),
             this, SLOT( addToSearch() ) );
 
+    addToFilterAction_ = new QAction( tr("&Add to Filter"), this );
+    addToFilterAction_->setStatusTip(
+            tr("Add the selection to the current search") );
+    connect( addToFilterAction_, SIGNAL( triggered() ),
+            this, SLOT( addToFilter() ) );
+
     popupMenu_ = new QMenu( this );
     popupMenu_->addAction( copyAction_ );
     popupMenu_->addSeparator();
     popupMenu_->addAction( findNextAction_ );
     popupMenu_->addAction( findPreviousAction_ );
     popupMenu_->addAction( addToSearchAction_ );
+    popupMenu_->addAction( addToFilterAction_ );
 }
 
 void AbstractLogView::considerMouseHovering( int x_pos, int y_pos )

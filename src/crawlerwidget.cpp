@@ -44,6 +44,7 @@
 #include "quickfindwidget.h"
 #include "persistentinfo.h"
 #include "configuration.h"
+#include "filtersdialog.h"
 
 // Palette for error signaling (yellow background)
 const QPalette CrawlerWidget::errorPalette( QColor( "yellow" ) );
@@ -576,6 +577,16 @@ void CrawlerWidget::changeFilteredViewVisibility( int index )
     filteredView->selectAndDisplayLine( lineIndex );
 }
 
+// Slot function
+void CrawlerWidget::addToFilter( const QString& string )
+{
+    FiltersDialog dialog(this);
+    dialog.addFilter(string);
+    connect(&dialog, SIGNAL( optionsChanged() ), this, SLOT( applyConfiguration() ));
+    dialog.exec();
+    disconnect(&dialog, SIGNAL( optionsChanged() ), this, SLOT( applyConfiguration() ));
+}
+
 void CrawlerWidget::addToSearch( const QString& string )
 {
     QString text = searchLineEdit->currentText();
@@ -782,6 +793,9 @@ void CrawlerWidget::setup()
             this, SLOT( markLineFromMain( qint64 ) ) );
     connect(filteredView, SIGNAL( markLine( qint64 ) ),
             this, SLOT( markLineFromFiltered( qint64 ) ) );
+
+    connect( logMainView, SIGNAL( addToFilter( const QString& ) ),
+             this, SLOT( addToFilter( const QString& ) ) );
 
     connect(logMainView, SIGNAL( addToSearch( const QString& ) ),
             this, SLOT( addToSearch( const QString& ) ) );

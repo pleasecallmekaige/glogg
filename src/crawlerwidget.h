@@ -172,6 +172,9 @@ class CrawlerWidget : public QSplitter,
     // Called when the user change the visibility combobox
     void changeFilteredViewVisibility( int index );
 
+    // add selection string to the filter
+    void addToFilter( const QString& string );
+
     // Called when the user add the string to the search
     void addToSearch( const QString& string );
 

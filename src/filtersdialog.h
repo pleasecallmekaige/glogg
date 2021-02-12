@@ -34,6 +34,9 @@ class FiltersDialog : public QDialog, public Ui::FiltersDialog
   public:
     FiltersDialog( QWidget* parent = 0 );
 
+    // add a new Filter from the values param pass.
+    void addFilter(const QString& pattern);
+
   signals:
     // Is emitted when new settings must be used
     void optionsChanged();
