@@ -64,10 +64,6 @@ class LineChunk
     const QColor& foreColor() const { return foreColor_; }
     const QColor& backColor() const { return backColor_; }
 
-    // Returns 'true' if the selection is part of this chunk
-    // (at least partially), if so, it should be replaced by the list returned
-    QList<LineChunk> select( int selection_start, int selection_end ) const;
-
   private:
     int start_;
     int end_;

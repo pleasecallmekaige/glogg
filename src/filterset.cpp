@@ -154,7 +154,7 @@ bool FilterSet::matchLine( const QString& line,
             foreColor.setNamedColor( i->foreColorName() );
             backColor.setNamedColor( i->backColorName() );
             newMatach.setColor(foreColor, backColor);
-            matches << newMatach;
+            newMatach.addToList(matches);
             rlt = true;
         }
     }

@@ -12,6 +12,7 @@ class MatchChunk
     enum MatchChunkType {
         Filter,
         QuickFind,
+        Selected,
     };
     // Construct a match (must be initialised)
     MatchChunk( int start_column, int length , MatchChunkType type)
@@ -20,6 +21,15 @@ class MatchChunk
         startColumn_ = start_column;
         length_ = length; 
         endColumn_ = start_column + length;
+    }
+
+    MatchChunk( const MatchChunk & match)
+    { 
+        type_ = match.type();
+        startColumn_ = match.startColumn();
+        length_ = match.length(); 
+        endColumn_ = startColumn_ + length_;
+        setColor( match.foreColor(), match.backColor() );
     }
 
     // Accessor functions
@@ -39,11 +49,13 @@ class MatchChunk
         endColumn_ = value;
         length_ = endColumn_ - startColumn_;
     }
-    void setColor(QColor& foreColor, QColor& backColor) 
+    void setColor(const QColor& foreColor, const QColor& backColor) 
     {
         foreColor_ = foreColor;
         backColor_ = backColor;
     }
+
+    QLinkedList<MatchChunk>& addToList( QLinkedList<MatchChunk>& out);
 
   private:
     MatchChunkType type_;
@@ -62,7 +74,5 @@ enum Relative_Position {
     BE_CONTAIN,
     CONTAIN,
 };
-
-QLinkedList<MatchChunk>& operator<<( QLinkedList<MatchChunk>& out, MatchChunk& object );
 
 #endif

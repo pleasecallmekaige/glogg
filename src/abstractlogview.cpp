@@ -49,6 +49,7 @@
 #include "quickfindpattern.h"
 #include "overview.h"
 #include "configuration.h"
+#include "matchchunk.h"
 
 namespace {
 int mapPullToFollowLength( int length );
@@ -99,7 +100,7 @@ int countDigits( quint64 n )
 
 LineChunk::LineChunk( int first_col, int last_col, ChunkType type )
 {
-    // LOG(logDEBUG) << "new LineChunk: " << first_col << " " << last_col;
+    // LOG(logINFO) << "new LineChunk: " << "type: " << type << " start:" << first_col << " end:" << last_col;
 
     start_ = first_col;
     end_   = last_col;
@@ -108,7 +109,6 @@ LineChunk::LineChunk( int first_col, int last_col, ChunkType type )
 
 LineChunk::LineChunk( int first_col, int last_col, MatchChunk match )
 {
-    // LOG(logDEBUG) << "new LineChunk: " << first_col << " " << last_col;
 
     start_ = first_col;
     end_   = last_col;
@@ -116,37 +116,13 @@ LineChunk::LineChunk( int first_col, int last_col, MatchChunk match )
         type_ = LineChunk::Filter;
     } else if ( MatchChunk::QuickFind == match.type() ) {
         type_ = LineChunk::Highlighted;
+    } else if ( MatchChunk::Selected == match.type() ) {
+        type_ = LineChunk::Selected;
     }
     foreColor_ = match.foreColor();
     backColor_ = match.backColor();
-}
 
-QList<LineChunk> LineChunk::select( int sel_start, int sel_end ) const
-{
-    QList<LineChunk> list;
-
-    if ( ( sel_start < start_ ) && ( sel_end < start_ ) ) {
-        // Selection BEFORE this chunk: no change
-        list << LineChunk( *this );
-    }
-    else if ( sel_start > end_ ) {
-        // Selection AFTER this chunk: no change
-        list << LineChunk( *this );
-    }
-    else /* if ( ( sel_start >= start_ ) && ( sel_end <= end_ ) ) */
-    {
-        // We only want to consider what's inside THIS chunk
-        sel_start = qMax( sel_start, start_ );
-        sel_end   = qMin( sel_end, end_ );
-
-        if ( sel_start > start_ )
-            list << LineChunk( start_, sel_start - 1, type_ );
-        list << LineChunk( sel_start, sel_end, Selected );
-        if ( sel_end < end_ )
-            list << LineChunk( sel_end + 1, end_, type_ );
-    }
-
-    return list;
+    // LOG(logINFO) << "new LineChunk: " << "type: " << type_ << " start:" << first_col << " end:" << last_col;
 }
 
 inline void LineDrawer::addChunk( int first_col, int last_col,
@@ -1568,16 +1544,19 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
         QLinkedList<class MatchChunk> MatchList;
         bool isFilterMatch =
             filterSet->matchLine( logData->getLineString( line_index ), MatchList );
+        // Has the line got elements to be highlighted
+        bool isQuickFindMatch =
+            quickFindPattern_->matchLine( line, MatchList );
+
 
         // Is there something selected in the line?
         int sel_start, sel_end;
         bool isSelection =
             selection_.getPortionForLine( line_index, &sel_start, &sel_end );
-        // Has the line got elements to be highlighted
-        bool isQuickFindMatch =
-            quickFindPattern_->matchLine( line, MatchList );
-
-        LOG(logINFO) << "MatchList size " << MatchList.size();
+        if ( isSelection ) {
+            // LOG(logINFO) << "isSelection:" << isSelection << " line_index:" << line_index << " sel_start:" << sel_start << " sel_end:" << sel_end;
+            MatchChunk(sel_start, sel_end - sel_start, MatchChunk::Selected).addToList(MatchList);
+        }
 
         if ( isSelection || isFilterMatch || isQuickFindMatch ) {
             // We use the LineDrawer and its chunks because the
@@ -1595,27 +1574,14 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
                     continue;
                 if ( start > column )
                     chunkList << LineChunk( column, start - 1, LineChunk::Normal );
-                column = qMin( start + match.length() - 1, nbCols );
+                column = qMin( end - 1, nbCols );
                 chunkList << LineChunk( qMax( start, 0 ), column, match );
                 column++;
             }
             if ( column <= cutLine.length() - 1 )
                 chunkList << LineChunk( column, cutLine.length() - 1, LineChunk::Normal );
 
-            // Then we add the selection if needed
-            QList<LineChunk> newChunkList;
-            if ( isSelection ) {
-                sel_start -= firstCol; // coord in line space
-                sel_end   -= firstCol;
-
-                foreach ( const LineChunk chunk, chunkList ) {
-                    newChunkList << chunk.select( sel_start, sel_end );
-                }
-            }
-            else
-                newChunkList = chunkList;
-
-            foreach ( LineChunk chunk, newChunkList ) {
+            foreach ( LineChunk chunk, chunkList ) {
                 // Select the colours
                 QColor fore;
                 QColor back;
@@ -1638,7 +1604,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
                     case LineChunk::Selected:
                         fore = palette.color( QPalette::HighlightedText ),
                         back = palette.color( QPalette::Highlight );
-                        chunk.setColor(foreColor, backColor);
+                        chunk.setColor(fore, back);
                         break;
                 }
                 lineDrawer.addChunk ( chunk );

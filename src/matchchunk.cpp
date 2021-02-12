@@ -1,5 +1,5 @@
 #include "matchchunk.h"
-
+#include "log.h"
 
 // return Relative_Position betwin old MatchChunk and new MatchChunk
 static inline Relative_Position _Get_Position(const MatchChunk& Item,const MatchChunk& object){
@@ -31,29 +31,30 @@ static inline Relative_Position _Get_Position(const MatchChunk& Item,const Match
     }
 }
 
-QLinkedList<MatchChunk>& operator<<( QLinkedList<MatchChunk>& out, MatchChunk& object )
+QLinkedList<MatchChunk>& MatchChunk::addToList( QLinkedList<MatchChunk>& out)
 {
     QLinkedList<MatchChunk>::iterator i;
 
-    if ( out.isEmpty() || object.startColumn() >= out.last().endColumn() ) {
-        out.push_back(object);
+    if ( out.isEmpty() || this->startColumn() >= out.last().endColumn() ) {
+        out.push_back(*this);
         return out;
     }
 
     for (i = out.begin(); i != out.end();) {
-        switch ( _Get_Position( *i, object) ) {
+        switch ( _Get_Position( *i, *this) ) {
             case BEFORE:
-                out.insert(i, object);
+                out.insert(i, *this);
+                // LOG(logINFO) << "INSERT:" << "start:" << this->startColumn() << " end:" << this->endColumn();
                 return out;
             break;
             case AFTER:
                 ++i;
             break;
             case BERORE_INTERSERT:
-                i->setStartColumn(object.endColumn());
+                i->setStartColumn(this->endColumn());
             break;
             case AFTER_INTERSERT:
-                i->setEndColumn(object.startColumn());
+                i->setEndColumn(this->startColumn());
                 ++i;
             break;
             case CONTAIN:
@@ -61,14 +62,22 @@ QLinkedList<MatchChunk>& operator<<( QLinkedList<MatchChunk>& out, MatchChunk& o
             break;
             case BE_CONTAIN:
                 // 原本的MatchChunk被拆成了两半
-                MatchChunk newMatch = MatchChunk ( object.endColumn(), i->endColumn(), i->type() );
-                i->setEndColumn(object.startColumn());
-                out.insert(i+1, newMatch);
+                // LOG(logINFO) << "BE_CONTAIN: newMatch" << "start:" << this->endColumn() << " end:" << i->endColumn();
+                MatchChunk newMatch (*i);
+                newMatch.setStartColumn( this->endColumn() );
+                i->setEndColumn(this->startColumn());
+                if ( i+1 == out.end() ) {
+                    // LOG(logINFO) << "BE_CONTAIN:push_back";
+                    out.push_back(newMatch);
+                } else {
+                    // LOG(logINFO) << "BE_CONTAIN:insert";
+                    out.insert(i+1, newMatch);
+                }
                 ++i;
             break;
         }
         if ( i == out.end() ) {
-            out.push_back(object);
+            out.push_back(*this);
             return out;
         }
     }

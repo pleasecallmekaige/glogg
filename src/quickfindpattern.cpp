@@ -80,7 +80,7 @@ bool QuickFindPattern::matchLine( const QString& line,
 
         while( matchIterator.hasNext() ) {
             QRegularExpressionMatch match = matchIterator.next();
-            matches << MatchChunk ( match.capturedStart(), match.capturedLength(), MatchChunk::QuickFind );
+            MatchChunk(match.capturedStart(), match.capturedLength(), MatchChunk::QuickFind).addToList(matches);
             rlt = true;
         }
     }
