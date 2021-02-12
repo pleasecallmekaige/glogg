@@ -1575,7 +1575,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
             selection_.getPortionForLine( line_index, &sel_start, &sel_end );
         if ( isSelection ) {
             // LOG(logINFO) << "isSelection:" << isSelection << " line_index:" << line_index << " sel_start:" << sel_start << " sel_end:" << sel_end;
-            MatchChunk(sel_start, sel_end - sel_start, MatchChunk::Selected).addToList(MatchList);
+            MatchChunk(sel_start, sel_end - sel_start + 1, MatchChunk::Selected).addToList(MatchList);
         }
 
         if ( isSelection || isFilterMatch || isQuickFindMatch ) {
