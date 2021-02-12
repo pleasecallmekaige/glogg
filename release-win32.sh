@@ -11,17 +11,17 @@ BOOSTDIR=/d/Lib/boost_1_75_0
 
 if [ -z "$VERSION" ]; then
     echo "Building default version"
-    qmake glogg.pro -spec win32-g++ -r CONFIG+=release BOOST_PATH=$BOOSTDIR
+    qmake glogg.pro -spec glogg_win32-g++ -r CONFIG+=release BOOST_PATH=$BOOSTDIR
 else
     echo "Building version $VERSION"
-    qmake glogg.pro -spec win32-g++ -r CONFIG+=release BOOST_PATH=$BOOSTDIR VERSION="$VERSION"
+    qmake glogg.pro -spec glogg_win32-g++ -r CONFIG+=release BOOST_PATH=$BOOSTDIR VERSION="$VERSION"
 fi
 mingw32-make
 
-cp $QT_MINGW32_BIN_PATH/{Qt5Core,Qt5Gui,Qt5Widgets,Qt5Network,libgcc_s_dw2-1,libwinpthread-1,libstdc++-6}.dll $RELEASE_PATH/
+cp $QT_BIN_PATH/{Qt5Core,Qt5Gui,Qt5Widgets,Qt5Network,libgcc_s_dw2-1,libwinpthread-1,libstdc++-6}.dll $RELEASE_PATH/
 
-if [ -z "$VERSION" ]; then
-    VERSION=`git describe`;
-fi
+# if [ -z "$VERSION" ]; then
+#     VERSION=`git describe`;
+# fi
 # echo Generating installer for glogg-$VERSION
 # /cygdrive/c/Program\ Files/NSIS/makensis -DVERSION=$VERSION glogg.nsi
