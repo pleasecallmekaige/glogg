@@ -796,6 +796,8 @@ void CrawlerWidget::setup()
 
     connect( logMainView, SIGNAL( addToFilter( const QString& ) ),
              this, SLOT( addToFilter( const QString& ) ) );
+    connect(filteredView, SIGNAL( addToFilter( const QString& ) ),
+            this, SLOT( addToFilter( const QString& ) ) );
 
     connect(logMainView, SIGNAL( addToSearch( const QString& ) ),
             this, SLOT( addToSearch( const QString& ) ) );
